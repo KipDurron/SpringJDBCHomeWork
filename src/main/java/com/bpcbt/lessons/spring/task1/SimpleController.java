@@ -1,9 +1,12 @@
 package com.bpcbt.lessons.spring.task1;
 
-import com.bpcbt.lessons.spring.task1.Account;
+import com.bpcbt.lessons.spring.task1.ObjectMapping.Account;
+import com.bpcbt.lessons.spring.task1.ObjectMapping.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class SimpleController {
@@ -17,6 +20,7 @@ public class SimpleController {
 
     public void run() {
         select();
+        getCustomerAccount("Vasily");
     }
 
 
@@ -34,6 +38,15 @@ public class SimpleController {
 
     private Account getCustomerAccount(String name) {
         //TODO get customer account by name
+       List<Account> results = jdbcTemplate.query("select * from customers join accounts on customers.account_id = accounts.id  where customers.name = ?",
+                preparedStatement -> {
+                    preparedStatement.setString(1, name);
+                },
+                new AccountMapper()
+        );
+        for (Account account : results) {
+            System.out.println(account);
+        }
         return null;
     }
 
