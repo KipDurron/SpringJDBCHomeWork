@@ -62,7 +62,7 @@ public class Account {
     @Override
     public String toString() {
         return String.format(
-                "Account[id=%d, account_number='%d, name='%s',currency='%s', amount='%s']",
-                id, account_number ,customer.getName(),currency, amount);
+                "Account '%s' [id='%d', account_number='%d', currency='%s', amount='%s']",
+                customer.getName(),id, account_number, currency, amount);
     }
 }

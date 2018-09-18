@@ -20,7 +20,7 @@ public class SimpleController {
 
     public void run() {
         select();
-        getCustomerAccount("Vasily");
+        transfer("Ilya", "Vasily", 100000L, "RUR");
     }
 
 
@@ -37,21 +37,40 @@ public class SimpleController {
     }
 
     private Account getCustomerAccount(String name) {
-        //TODO get customer account by name
-       List<Account> results = jdbcTemplate.query("select * from customers join accounts on customers.account_id = accounts.id  where customers.name = ?",
-                preparedStatement -> {
-                    preparedStatement.setString(1, name);
-                },
-                new AccountMapper()
+       Account account = jdbcTemplate.queryForObject("select * from customers join accounts on customers.account_id = accounts.id  where customers.name = ?",
+                new AccountMapper(),
+               name
         );
-        for (Account account : results) {
-            System.out.println(account);
-        }
-        return null;
+        return account;
+    }
+
+    private Double getCurrencyMultiplier(String currencyFrom, String currencyTo) {
+        Double multiplier = jdbcTemplate.queryForObject("select multiplier from currency_rates where currency1 = ? and currency2 = ?",
+                Double.class,
+                currencyFrom, currencyTo
+        );
+        return multiplier;
+    }
+
+    private void updateAmount(int id, int newAmount){
+        jdbcTemplate.update("update accounts SET amount=? WHERE id=?", newAmount, id);
     }
 
     private void transfer(String customerFrom, String customerTo, Long amount, String currency) {
-
+        Account accountFrom = getCustomerAccount(customerFrom);
+        Double multiplierFrom = getCurrencyMultiplier(currency, accountFrom.getCurrency());
+        int newAmountFrom = (int)(accountFrom.getAmount() - amount*multiplierFrom);
+        if (newAmountFrom >= 0){
+            updateAmount(accountFrom.getId(), newAmountFrom);
+            Account accountTo = getCustomerAccount(customerTo);
+            Double multiplierTo = getCurrencyMultiplier(currency, accountTo.getCurrency());
+            int newAmountTo = (int)(accountTo.getAmount() + amount*multiplierTo);
+            updateAmount(accountTo.getId(), newAmountTo);
+            System.out.println(getCustomerAccount(customerFrom));
+            System.out.println(getCustomerAccount(customerTo));
+        } else {
+            System.out.print("Недостаточно средств для перевода денег");
+        }
     }
 
     private void printAllDataFromDatabase() {

@@ -12,7 +12,8 @@ CREATE TABLE accounts (
 );
 
 CREATE TABLE currency_rates (
-  currency1  VARCHAR(3) PRIMARY KEY,
-  currency2  VARCHAR(3) PRIMARY KEY,
+  id         INTEGER PRIMARY KEY,
+  currency1  VARCHAR(3) ,
+  currency2  VARCHAR(3) ,
   multiplier DOUBLE (5)
 );
