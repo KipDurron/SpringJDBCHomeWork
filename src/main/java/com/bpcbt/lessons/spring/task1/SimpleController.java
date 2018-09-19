@@ -1,7 +1,6 @@
 package com.bpcbt.lessons.spring.task1;
 
-import com.bpcbt.lessons.spring.task1.ObjectMapping.Account;
-import com.bpcbt.lessons.spring.task1.ObjectMapping.AccountMapper;
+import com.bpcbt.lessons.spring.task1.ObjectMapping.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -19,8 +18,8 @@ public class SimpleController {
     }
 
     public void run() {
-        select();
-        transfer("Ilya", "Vasily", 100000L, "RUR");
+        transfer("Dmitry", "Vasily", 25000L, "RUR");
+        printAllDataFromDatabase();
     }
 
 
@@ -37,7 +36,8 @@ public class SimpleController {
     }
 
     private Account getCustomerAccount(String name) {
-       Account account = jdbcTemplate.queryForObject("select * from customers join accounts on customers.account_id = accounts.id  where customers.name = ?",
+       Account account = jdbcTemplate.queryForObject("select accounts.id, account_number, currency, amount" +
+                       " from customers join accounts on customers.account_id = accounts.id  where customers.name = ?",
                 new AccountMapper(),
                name
         );
@@ -52,8 +52,8 @@ public class SimpleController {
         return multiplier;
     }
 
-    private void updateAmount(int id, int newAmount){
-        jdbcTemplate.update("update accounts SET amount=? WHERE id=?", newAmount, id);
+    private int updateAmount(int id, int newAmount){
+       return jdbcTemplate.update("update accounts SET amount=? WHERE id=?", newAmount, id);
     }
 
     private void transfer(String customerFrom, String customerTo, Long amount, String currency) {
@@ -61,11 +61,18 @@ public class SimpleController {
         Double multiplierFrom = getCurrencyMultiplier(currency, accountFrom.getCurrency());
         int newAmountFrom = (int)(accountFrom.getAmount() - amount*multiplierFrom);
         if (newAmountFrom >= 0){
-            updateAmount(accountFrom.getId(), newAmountFrom);
             Account accountTo = getCustomerAccount(customerTo);
+            System.out.println("transfer of " + amount + " " + currency + " FROM "+ customerFrom +
+                    " with account_id = " + accountFrom.getId()+
+            " TO " + customerTo + " with account_id = " + accountTo.getId());
+            System.out.println("BEFORE:");
+            System.out.println(getCustomerAccount(customerFrom));
+            System.out.println(getCustomerAccount(customerTo));
+            updateAmount(accountFrom.getId(), newAmountFrom);
             Double multiplierTo = getCurrencyMultiplier(currency, accountTo.getCurrency());
             int newAmountTo = (int)(accountTo.getAmount() + amount*multiplierTo);
             updateAmount(accountTo.getId(), newAmountTo);
+            System.out.println("AFTER:");
             System.out.println(getCustomerAccount(customerFrom));
             System.out.println(getCustomerAccount(customerTo));
         } else {
@@ -74,11 +81,48 @@ public class SimpleController {
     }
 
     private void printAllDataFromDatabase() {
-
+        printAllAccount();
+        printAllCustomers();
+        printAllCurrencyRates();
     }
 
-    //TODO Create table currency_rates(Curr1, curr2, multiplier)
-    //TODO Write controller that will allow to transfer money between customers
-    //TODO with currency conversion by customers names and persist in database
+
+
+    private  void printAllAccount(){
+        List<Account> accounts = jdbcTemplate.query(
+                "select * from accounts",
+                new AccountMapper());
+
+        System.out.println("----------------");
+
+        for (Account account : accounts) {
+            System.out.println(account);
+        }
+    }
+
+    private  void printAllCustomers(){
+        List<Customer> customers = jdbcTemplate.query(
+                "select * from customers",
+               new CustomerMapper());
+
+        System.out.println("----------------");
+
+        for (Customer customer : customers) {
+            System.out.println(customer);
+        }
+    }
+
+    private  void printAllCurrencyRates(){
+        List<CurrencyRates> currencyRates = jdbcTemplate.query(
+                "select * from currency_rates",
+                new CurrencyRatesMapper());
+
+        System.out.println("----------------");
+
+        for (CurrencyRates currencyRate: currencyRates) {
+            System.out.println(currencyRate);
+        }
+    }
+
 
 }
