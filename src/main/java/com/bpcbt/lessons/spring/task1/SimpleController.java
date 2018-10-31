@@ -88,16 +88,17 @@ public class SimpleController {
 
 
 
-    private  void printAllAccount(){
+    public  List<Account> printAllAccount(){
         List<Account> accounts = jdbcTemplate.query(
                 "select * from accounts",
                 new AccountMapper());
 
-        System.out.println("----------------");
-
-        for (Account account : accounts) {
-            System.out.println(account);
-        }
+        return accounts;
+//        System.out.println("----------------");
+//
+//        for (Account account : accounts) {
+//            System.out.println(account);
+//        }
     }
 
     private  void printAllCustomers(){
